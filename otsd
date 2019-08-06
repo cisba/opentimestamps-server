@@ -66,6 +66,8 @@ parser.add_argument("--btc-min-confirmations", metavar='N', type=int,
 parser.add_argument("--btc-min-tx-interval", metavar='SECONDS', type=int,
                     default=3600,
                     help="Minimum interval between timestamp transactions (default: %(default)d seconds)")
+parser.add_argument('--working-hours', nargs='+', type=int, choices=range(0,24), metavar='HOUR',
+                    help='Restrict timestamp transactions only at defined hours as UTC integer values (0..23)')
 parser.add_argument("--btc-max-fee", metavar='FEE', type=float,
                     default=0.0001,
                     help="Maximum transaction fee (default: %(default).3f BTC)")
@@ -123,7 +125,8 @@ stamper = otsserver.stamper.Stamper(calendar, exit_event,
                                     args.btc_min_confirmations,
                                     args.btc_min_tx_interval,
                                     args.btc_max_fee * bitcoin.core.COIN,
-                                    args.max_pending)
+                                    args.max_pending,
+                                    args.working_hours)
 
 calendar.stamper = stamper
 

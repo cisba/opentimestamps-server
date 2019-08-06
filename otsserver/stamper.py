@@ -25,6 +25,7 @@ from opentimestamps.core.op import OpPrepend, OpSHA256
 from opentimestamps.core.timestamp import Timestamp, make_merkle_tree
 
 from otsserver.calendar import Journal
+from datetime import datetime
 
 KnownBlock = collections.namedtuple('KnownBlock', ['height', 'hash'])
 TimestampTx = collections.namedtuple('TimestampTx', ['tx', 'tip_timestamp', 'commitment_timestamps'])
@@ -370,6 +371,10 @@ class Stamper:
 
                 break
 
+        if self.working_hours and datetime.utcnow().hour not in self.working_hours:
+            logging.debug("No working hour")
+            return
+
         time_to_next_tx = int(self.last_timestamp_tx + self.min_tx_interval * random.uniform(1, 2) - time.time())
         if time_to_next_tx > 0:
             # Minimum interval between transactions hasn't been reached, so do nothing
@@ -517,7 +522,7 @@ class Stamper:
             else:
                 return False
 
-    def __init__(self, calendar, exit_event, relay_feerate, min_confirmations, min_tx_interval, max_fee, max_pending):
+    def __init__(self, calendar, exit_event, relay_feerate, min_confirmations, min_tx_interval, max_fee, max_pending, working_hours):
         self.calendar = calendar
         self.exit_event = exit_event
 
@@ -527,6 +532,7 @@ class Stamper:
         self.min_tx_interval = min_tx_interval
         self.max_fee = max_fee
         self.max_pending = max_pending
+        self.working_hours = working_hours
 
         self.known_blocks = KnownBlocks()
         self.unconfirmed_txs = []
