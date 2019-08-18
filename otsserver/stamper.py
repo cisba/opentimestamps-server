@@ -411,8 +411,22 @@ class Stamper:
         # that the proxy dies
         proxy = bitcoin.rpc.Proxy()
 
-        sent_tx = None
         relay_feerate = self.relay_feerate
+        # if opted-in try to get estimatesmartfee as
+        if self.btc_estimatesmartfee_mode:
+            try:
+                r = proxy.call('estimatesmartfee',
+                        self.btc_estimatesmartfee_target,
+                        self.btc_estimatesmartfee_mode)
+                if 'feerate' in r: # Success!
+                    relay_feerate = float(r['feerate']) /1000 * bitcoin.core.COIN
+                elif 'errors' in r:
+                    logging.info("estimatesmartfee not available: %r" % r['errors'])
+            except bitcoin.rpc.JSONRPCError as err:
+                logging.debug("estimatesmartfee error: %r" % err.error)
+        logging.info("relay feerate: %f" % relay_feerate)
+
+        sent_tx = None
         while sent_tx is None:
             unsigned_tx = self.__update_timestamp_tx(prev_tx, tip_timestamp.msg,
                                                      proxy.getblockcount(), relay_feerate)
@@ -522,11 +536,13 @@ class Stamper:
             else:
                 return False
 
-    def __init__(self, calendar, exit_event, relay_feerate, min_confirmations, min_tx_interval, max_fee, max_pending, working_hours):
+    def __init__(self, calendar, exit_event, relay_feerate, btc_estimatesmartfee_mode, btc_estimatesmartfee_target, min_confirmations, min_tx_interval, max_fee, max_pending, working_hours):
         self.calendar = calendar
         self.exit_event = exit_event
 
         self.relay_feerate = relay_feerate
+        self.btc_estimatesmartfee_mode = btc_estimatesmartfee_mode
+        self.btc_estimatesmartfee_target = btc_estimatesmartfee_target
         self.min_confirmations = min_confirmations
         assert self.min_confirmations > 1
         self.min_tx_interval = min_tx_interval

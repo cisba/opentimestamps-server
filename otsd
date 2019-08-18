@@ -59,6 +59,12 @@ parser.add_argument("--max-pending", type=int,
 parser.add_argument("--btc-min-relay-feerate", metavar='FEEPERKB', type=float,
                     default=0.00001,
                     help="Minimum relay feerate (default: %(default).6f BTC/KB)")
+parser.add_argument("--btc-estimatesmartfee-mode", metavar='ESTIMATEMODE', type=str,
+                    default=None, choices=['CONSERVATIVE', 'ECONOMICAL'],
+                    help="The fee estimate mode (CONSERVATIVE or ECONOMICAL), disabled by default if unset")
+parser.add_argument("--btc-estimatesmartfee-target", metavar='ESTIMATETARGET', type=int,
+                    default=6,
+                    help="Confirmation target in blocks (1 - 1008, default: %(default)d)")
 parser.add_argument("--btc-min-confirmations", metavar='N', type=int,
                     default=6,
                     help="Confirmations required before we save a Bitcoin timestamp permanently, must be greater than 1"
@@ -122,6 +128,8 @@ aggregator = otsserver.calendar.Aggregator(calendar, exit_event)
 
 stamper = otsserver.stamper.Stamper(calendar, exit_event,
                                     args.btc_min_relay_feerate / 1000 * bitcoin.core.COIN,
+                                    args.btc_estimatesmartfee_mode,
+                                    args.btc_estimatesmartfee_target,
                                     args.btc_min_confirmations,
                                     args.btc_min_tx_interval,
                                     args.btc_max_fee * bitcoin.core.COIN,
