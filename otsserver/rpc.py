@@ -17,6 +17,7 @@ import threading
 import time
 import pystache
 import datetime 
+import simplejson
 from functools import reduce
 
 import bitcoin.core
@@ -247,8 +248,11 @@ Latest mined transactions: </br>
               'time_between_transactions': time_between_transactions,
               'fees_in_last_week': fees_in_last_week,
             }
-            welcome_page = renderer.render(homepage_template, stats)
-            self.wfile.write(str.encode(welcome_page))
+            if self.headers['Accept'] == "application/json":
+                self.wfile.write(str.encode(simplejson.dumps(stats, use_decimal=True, indent=4 * ' ')))
+            else:
+                welcome_page = renderer.render(homepage_template, stats)
+                self.wfile.write(str.encode(welcome_page))
 
 
         elif self.path.startswith('/timestamp/'):
